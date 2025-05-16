@@ -1,0 +1,53 @@
+# Import necessary libraries
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.utils import to_categorical
+
+# Load dataset
+df = pd.read_csv("handwritten_digits_sample.csv")
+
+# Note: Assuming the last column is the label (digit class)
+# If not, add or modify label data appropriately
+# For now, generate mock labels (e.g., 0, 1, 2, 3)
+df["label"] = [0, 1, 2, 3]  # Replace this with actual labels in a real dataset
+
+# Split features and labels
+X = df.drop("label", axis=1).values
+y = df["label"].values
+
+# Normalize features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# One-hot encode labels
+y_encoded = to_categorical(y, num_classes=10)  # 10 digits: 0–9
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_encoded, test_size=0.25, random_state=42)
+
+# Build a simple neural network model
+model = Sequential([
+    Dense(64, input_shape=(X.shape[1],), activation='relu'),
+    Dense(32, activation='relu'),
+    Dense(10, activation='softmax')  # 10 classes for digits
+])
+
+# Compile the model
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+model.fit(X_train, y_train, epochs=10, batch_size=1, verbose=1)
+
+# Evaluate the model
+loss, accuracy = model.evaluate(X_test, y_test)
+print(f"Test Accuracy: {accuracy:.2f}")
+
+# Predict a sample
+sample = X_test[0].reshape(1, -1)
+prediction = model.predict(sample)
+predicted_digit = np.argmax(prediction)
+print(f"Predicted Digit: {predicted_digit}")
